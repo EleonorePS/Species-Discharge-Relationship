@@ -197,6 +197,9 @@ table
 chisq.test(table)
 
 
+#remove correlated variables (with logQ)
+d_pcrglob_subset<-subset(d_pcrglob_subset, select = -c(prec,logprec))
+
 
 #preprocess dataset----------------------------------------------------------------
 
@@ -238,8 +241,7 @@ kruskal.test(temp~habitat.f, data =d_pcrglob_preproc)
 
 
 
-#remove correlated variables (with logQ)
-d_pcrglob_subset<-subset(d_pcrglob_subset, select = -c(prec,logprec))
+
 
 
 
