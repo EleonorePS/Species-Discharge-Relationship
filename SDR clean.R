@@ -1,7 +1,7 @@
 #code info-------------------------------------------------
 
 # author: Eleonore Pierrat - July 2022
-# citation : Global modelling of water consumption impacts on freshwater fish biodiversity in LCA, submitted
+# citation : Pierrat, E., Barbarossa, V., Núñez, M., Scherer, L., Link, A., Damiani, M., … Dorber, M. (2023). Global water consumption impacts on riverine fish species richness in Life Cycle Assessment. Science of The Total Environment, 854, 158702. https://doi.org/10.1016/j.scitotenv.2022.158702
 # this code performed the K10 cross validation to select the SDR model (data preprocessing done elsewhere) 
 
 #import libraries-------------------------
@@ -141,20 +141,6 @@ d_pcrglob.vals$native <- (d_pcrglob$SR_tot - d_pcrglob$SR_exo)/d_pcrglob$SR_tot*
 d_pcrglob_subset<-data.frame(d_pcrglob.vals,d_pcrglob.factors)
 
 
-
-
-#sdr curve
-#ggplot(subset(d_pcrglob_subset,(q>=0)&(area>2550)), aes(log(q),log(SR_tot)))+#best model
-#  geom_point()+
-#  theme_bw()+
-#  theme(
-#    panel.grid.major = element_blank(), 
-#    panel.grid.minor = element_blank())+
-  #geom_abline(slope= 1, intercept = 0)
-  #ylim(0,10)+
-  #xlim(0,10)+
-  #facet_wrap(~ climate5.f)
-
 #q distribution study
 hist(log(d_pcrglob.vals$q,10))
 plot(seq(0, 1, 0.1), quantile(log(d_pcrglob.vals$q,10),probs = seq(0, 1, 0.1)),  type = "b", xlab = c("percentile"))
@@ -250,7 +236,7 @@ kruskal.test(temp~habitat.f, data =d_pcrglob_preproc)
 #fit regression SDR with cross validation------------------------------------------------------------
 
 
-#create 10 partitions for which the largest set is used for training i-e- 75% of the dataset
+#create 10 partitions for which the largest set is used for training i-e- 90% of the dataset
 set.seed(5000)#first 2011, 2103, 5000
 
 
@@ -402,8 +388,7 @@ for (i in 1:N){
   check <-subset(d, folds==i)
   train<-subset(d,folds=!i)
   
-  #check<-subset(check,select = c('SR_tot','q','logq','elevation','climate5.f'))
-  #train<-subset(train,select = c('SR_tot','q','logq','elevation','climate5.f'))
+
   check<-subset(check,select = c('SR_tot','q','logq','elevation','climate5.f','habitat.f', "logA"))
   train<-subset(train,select = c('SR_tot','q','logq','elevation','climate5.f','habitat.f', "logA"))
 
@@ -542,15 +527,6 @@ summary(M5)
 coeffs5<-data.frame(CI=confint(M5, level = 0.95, digits = 3), estimate = data.frame(M5$coefficients))
 print(coeffs5, digits = 2)
 
-i<-which.min(resultsM2$BIC)
-check<-subset(d, folds ==i)
-train<-subset(d, folds !=i)
-M2 =glm(bestM2$formula, family = gaussian(link = identity),data=train)
-summary(M2)
-coeffs2<-data.frame(CI=confint(M2, level = 0.95, digits = 3), estimate = data.frame(M2$coefficients))
-print(coeffs2, digits = 2)
-
-
 i<-which.min(resultsM4$BIC)
 check<-subset(d, folds ==i)
 train<-subset(d, folds !=i)
@@ -588,29 +564,6 @@ averageContribution(dominance)
 
 
 
-
-
-#verify GLM hypothesis for M5 ----------------------------------------------------------
-
-best_M <- M5
-summary(best_M)
-
-#verify normal distribution of residuals, independence, linear regression, homogeneity
-par(mfrow = c(2, 2))
-plot(best_M, which = 1:4)
-par(mfrow = c(1,1))
-
-plot(M5$fitted.values, best_M$residuals)
-
-
-sim50<-predict(best_M, d_pcrglob_preproc)#complete dataset
-test50<-cbind(d_pcrglob_subset, sim50)
-
-
-
-
-
-
 #verify GLM hypothesis for M4 ----------------------------------------------------------
 
 best_M <- M4
@@ -640,17 +593,17 @@ ggplot(test40, aes(log(SR_tot),sim40, colour = climate5.f))+#best model
 #sensitivity with Observed data-----------------------------
 
 #this is the preprocessed dataset with python
-d_sensitivity<- read.csv("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/output/dataset_SDR_GSIM_20211006.csv")#recalc
+d_sensitivity<- read.csv("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/output/dataset_SDR_GSIM_20211006.csv")#geoprocessed data for the GSIM basin delineation
 d_sensitivity <- d_sensitivity[,-1]
 d_sensitivity$BAS <- d_sensitivity$id_basin_gsim
 
 #join preprocessed data 
-joint<- read.xlsx("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/output/joint.xlsx")
+joint<- read.xlsx("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/output/joint.xlsx")#upload raw data
 d_out <- merge(joint, d_sensitivity, by = 'BAS')#basin that has both pcrglob and gsim basin
 
 
 #select latitude
-gsim_meta<- read.csv("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/GSIM_catchment_characteristics.csv")
+gsim_meta<- read.csv("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/GSIM_catchment_characteristics.csv")#info from GSIM dataset publication
 gsim_meta<-subset(gsim_meta, select=c('gsim.no', 'lat.new'))
 gsim_meta$ID <- gsim_meta$gsim.no
 
@@ -659,7 +612,7 @@ d_out <- merge(d_out, gsim_meta, by = 'ID')
 d_out<- subset(d_out, (lat.new > -42.0000)&(lat.new < 42.0000))#n=362
 
 #add species richness and observed discharge to preprocessed dataset
-d<- read.xlsx("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/schipper_barbarossa_2021/input_tab_divAREA_ep.xlsx")
+d<- read.xlsx("C:/Users/easpi/Documents/PhD Water Footprint/GLAM/code/schipper_barbarossa_2021/input_tab_divAREA_ep.xlsx")#data from Schipper and Barbarossa 2022
 d<-subset(d,select= c('SR_tot', 'Q_MEAN', 'PREC_PRES', 'TEMP_PRES', 'AREA', 'PREC_DELTA','TEMP_DELTA', 'TI','SLOPE','ELEVATION','ID'))
 d_out1 <- merge(d_out, d, by = 'ID')#basin that has both pcrglob and gsim basin
 
@@ -672,7 +625,8 @@ d$realm.f<-factor(d$realm)
 d$habitat.f<-factor(d$habitat)
 d$climate5.f<-factor(d$climate5)
 d$climate30.f<-factor(d$climate30)
-d$BAS.f<-factor(d$BAS)#need to add that"""
+d$BAS.f<-factor(d$BAS)
+
 
 #exclude basins that are not within the validity of the fitted SDR from CV
 d<-subset(d, (AREA > 2550)&(Q_MEAN>0))
