@@ -1,8 +1,8 @@
 #code info-------------------------------------------------
 
 # author: Eleonore Pierrat - July 2022
-# citation : Global modelling of water consumption impacts on freshwater fish biodiversity in LCA, submitted
-# this code calculates the  
+# citation :  Pierrat, E., Barbarossa, V., Núñez, M., Scherer, L., Link, A., Damiani, M., … Dorber, M. (2023). Global water consumption impacts on riverine fish species richness in Life Cycle Assessment. Science of The Total Environment, 854, 158702. https://doi.org/10.1016/j.scitotenv.2022.158702
+# this code sets input and output directories  
 
 #import libraries-------------------------
 
